@@ -11,9 +11,10 @@ scene_store: Dict[str, List[Dict]] = {}
 async def upload_files(files: List[UploadFile] = File(...)):
     for file in files:
         raw = await file.read()
-    content = raw.decode("utf-8")
-except UnicodeDecodeError:
-    content = raw.decode("windows-1252")  # fallback for smart quotes and dashes
+        try:
+            content = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            content = raw.decode("windows-1252")  # fallback for smart quotes and dashes
 
         scenes = []
         current_scene = None
