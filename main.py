@@ -50,14 +50,31 @@ def get_scene(file: str, title: str):
             return {"file": file, "title": title, "content": scene["content"]}
     return {"error": "Scene not found."}
 
+import re
+
 @app.get("/all_scenes/")
 def get_all_scenes():
-    all_scenes = []
+    memory_list = []
+
     for file in sorted(scene_store.keys()):
         for scene in scene_store[file]:
-            all_scenes.append({
-                "file": file,
+            # Try to extract scene number and date from title
+            match = re.match(r"Scene (\d+): (.+)", scene["title"])
+            if match:
+                scene_number = int(match.group(1))
+                scene_date = match.group(2).strip()
+            else:
+                scene_number = None
+                scene_date = None
+
+            memory_list.append({
+                "scene_number": scene_number,
+                "date": scene_date,
                 "title": scene["title"],
                 "content": scene["content"]
             })
-    return {"scenes": all_scenes}
+
+    return {
+        "summary": "This is Astarion’s lived memory from August 20th through September 23rd, as a linear sequence of scenes.",
+        "memories": sorted(memory_list, key=lambda x: x["scene_number"] or 0)
+    }
