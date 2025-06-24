@@ -13,14 +13,14 @@ async def upload_files(files: List[UploadFile] = File(...)):
         scenes = []
         current_scene = None
 
-        for line in content.splitlines():
-            if line.strip().startswith("### Scene:"):
-                if current_scene:
-                    scenes.append(current_scene)
-                current_scene = {
-                    "title": line.strip().replace("### Scene:", "").strip(),
-                    "content": ""
-                }
+        if line.strip().startswith("### Scene"):
+    if current_scene:
+        scenes.append(current_scene)
+    current_scene = {
+        "title": line.strip().replace("###", "").strip(),
+        "content": ""
+    }
+
             elif current_scene:
                 current_scene["content"] += line + "\n"
 
