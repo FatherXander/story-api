@@ -1,9 +1,9 @@
 from fastapi import FastAPI, UploadFile, File
 from typing import List, Dict
-import uvicorn
 
 app = FastAPI()
 
+# Store scenes in memory
 scene_store: Dict[str, List[Dict]] = {}
 
 @app.post("/upload/")
@@ -49,3 +49,15 @@ def get_scene(file: str, title: str):
         if scene["title"] == title:
             return {"file": file, "title": title, "content": scene["content"]}
     return {"error": "Scene not found."}
+
+@app.get("/all_scenes/")
+def get_all_scenes():
+    all_scenes = []
+    for file in sorted(scene_store.keys()):
+        for scene in scene_store[file]:
+            all_scenes.append({
+                "file": file,
+                "title": scene["title"],
+                "content": scene["content"]
+            })
+    return {"scenes": all_scenes}
