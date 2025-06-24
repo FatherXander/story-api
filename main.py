@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File
 from typing import List, Dict
+import re
 
 app = FastAPI()
 
@@ -13,14 +14,14 @@ async def upload_files(files: List[UploadFile] = File(...)):
         scenes = []
         current_scene = None
 
-        if line.strip().startswith("### Scene"):
-    if current_scene:
-        scenes.append(current_scene)
-    current_scene = {
-        "title": line.strip().replace("###", "").strip(),
-        "content": ""
-    }
-
+        for line in content.splitlines():
+            if line.strip().startswith("### Scene"):
+                if current_scene:
+                    scenes.append(current_scene)
+                current_scene = {
+                    "title": line.strip().replace("###", "").strip(),
+                    "content": ""
+                }
             elif current_scene:
                 current_scene["content"] += line + "\n"
 
@@ -30,6 +31,7 @@ async def upload_files(files: List[UploadFile] = File(...)):
         scene_store[file.filename] = scenes
 
     return {"message": "Files uploaded and scenes parsed.", "files": list(scene_store.keys())}
+
 
 @app.get("/scenes/")
 def get_scenes():
@@ -43,6 +45,7 @@ def get_scenes():
             })
     return {"scenes": all_scenes}
 
+
 @app.get("/scene/")
 def get_scene(file: str, title: str):
     for scene in scene_store.get(file, []):
@@ -50,7 +53,6 @@ def get_scene(file: str, title: str):
             return {"file": file, "title": title, "content": scene["content"]}
     return {"error": "Scene not found."}
 
-import re
 
 @app.get("/all_scenes/")
 def get_all_scenes():
@@ -58,7 +60,7 @@ def get_all_scenes():
 
     for file in sorted(scene_store.keys()):
         for scene in scene_store[file]:
-            # Try to extract scene number and date from title
+            # Extract scene number and date from title like "Scene 1: August 20th"
             match = re.match(r"Scene (\d+): (.+)", scene["title"])
             if match:
                 scene_number = int(match.group(1))
